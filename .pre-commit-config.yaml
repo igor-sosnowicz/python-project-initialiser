@@ -9,6 +9,7 @@ repos:
           - --unsafe
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: check-merge-conflict
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.2
     hooks:
@@ -27,6 +28,6 @@ repos:
         stages: [commit-msg]
         args: []
   - repo: https://github.com/crate-ci/typos
-    rev: v1
+    rev: v1.38.1
     hooks:
       - id: typos
