@@ -124,7 +124,9 @@ def initialise_github_repository(project_name: str) -> None:
 
         # Commit.
         try:
-            subprocess.run([git_path, "commit", "-m", "Initial commit"], check=True)
+            subprocess.run(
+                [git_path, "commit", "-m", "feat: Initial commit"], check=True
+            )
             print("Created initial commit.")
         except subprocess.CalledProcessError:
             print("No changes to commit or commit failed.")
