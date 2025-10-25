@@ -1,16 +1,21 @@
 [project]
-name = "$_$PROJECT_NAME$_$"
+name = "python-project-initialiser"
 version = "0.1.0"
-description = "$_$DESCRIPTION$_$"
+description = "python-project-initialiser-description"
 readme = "README.md"
-requires-python = ">=$_$PYTHON_VERSION$_$"
-dependencies = ["loguru>=0.7.3", "pydantic>=2.12.3", "typer>=0.20.0"]
+requires-python = ">=3.11"
+dependencies = [
+    "loguru>=0.7.3",
+    "pre-commit>=4.3.0",
+    "pydantic>=2.12.3",
+    "typer>=0.20.0",
+]
 
 [dependency-groups]
 dev = ["pytest>=7.0.0", "ruff>=0.1.0", "mypy>=1.0.0"]
 
 [project.scripts]
-app = "src.main:hello_world"
+app = "src.main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -20,14 +25,14 @@ build-backend = "hatchling.build"
 packages = ["src"]
 
 [tool.mypy]
-python_version = "$_$PYTHON_VERSION$_$"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 
 [tool.ruff]
 line-length = 88
-target-version = "$_$PYTHON_VERSION_MODIFIED$_$"
+target-version = "py311"
 
 [tool.ruff.format]
 indent-style = "space"
@@ -60,4 +65,10 @@ ignore = [
     "S101",   # Allow for asserts allowed in tests.
     "ARG",    # Ignore unused function arguments, because fixtures are not ordinary arguments.
     "SLF001", # Private members may be accessed in tests.
+]
+
+# Suppress warnings for the setup script.
+"initialise.py" = [
+    "T201",  # Allow print statements in the setup script for user feedback.
+    "S603",  # Allow subprocess calls with user-provided input in a controlled setup context.
 ]

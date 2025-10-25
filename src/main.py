@@ -8,7 +8,7 @@ app = typer.Typer(help=f"CLI for {config.project_name}", no_args_is_help=True)
 
 
 @app.command()
-def hello_world() -> None:
+def main() -> None:
     """Print a greeting."""
     typer.echo(f"Hello, world! It is {config.project_name}.")
 

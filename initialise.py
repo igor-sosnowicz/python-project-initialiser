@@ -1,23 +1,35 @@
 #!/usr/bin/env python3
-"""Project setup script that initializes a Python project using uv."""
+"""Project setup script that initialises a Python project."""
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 
-def check_uv_installed() -> None:
-    """Check if uv is installed."""
-    try:
-        subprocess.run(["uv", "--version"], check=True, capture_output=True)
-        print("uv is installed.")
-    except (subprocess.CalledProcessError, FileNotFoundError):
+def check_uv_installed() -> str:
+    """Check if uv is installed and return its path."""
+    uv_path = shutil.which("uv")
+    if uv_path is None:
         print(
             "uv is not installed. Please, install it from: "
             "https://docs.astral.sh/uv/getting-started/installation/#installation-methods"
         )
         sys.exit(1)
+    return uv_path
+
+
+def initialise_precommit(uv_path: str) -> None:
+    """Install pre-commit and initialise hooks using the provided uv executable path."""
+    subprocess.run(
+        [uv_path, "run", "pre-commit", "install"], check=True, capture_output=True
+    )
+    subprocess.run(
+        [uv_path, "run", "pre-commit", "run", "--all-files"],
+        check=True,
+        capture_output=True,
+    )
 
 
 def get_user_input() -> tuple[str, str, str]:
@@ -34,12 +46,12 @@ def get_user_input() -> tuple[str, str, str]:
 
 
 def replace_variables(project_name: str, description: str, python_version: str) -> None:
-    """Replace $_$VARIABLE$_$ placeholders in all files."""
+    """Replace variables placeholders in all files."""
     replacements = {
-        "$_$PROJECT_NAME$_$": project_name,
-        "$_$DESCRIPTION$_$": description,
-        "$_$PYTHON_VERSION$_$": python_version,
-        "$_$PYTHON_VERSION_MODIFIED$_$": f"py{python_version.replace('.', '')}",
+        "python-project-initialiser": project_name,
+        "python-project-initialiser-description": description,
+        "3.11": python_version,
+        "py311": f"py{python_version.replace('.', '')}",
     }
 
     for root, dirs, files in os.walk("."):
@@ -67,17 +79,13 @@ def replace_variables(project_name: str, description: str, python_version: str) 
 
 def initialise_github_repository(project_name: str) -> None:
     """Initialize a local Git repository and create a remote GitHub repository."""
-    try:
-        # Check if git is installed
-        subprocess.run(["git", "--version"], check=True, capture_output=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    git_path = shutil.which("git")
+    if git_path is None:
         print("Git is not installed. Please install Git to initialize the repository.")
         return
 
-    # Check if gh (GitHub CLI) is installed.
-    try:
-        subprocess.run(["gh", "--version"], check=True, capture_output=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    gh_path = shutil.which("gh")
+    if gh_path is None:
         print(
             "GitHub CLI (gh) is not installed. Please install it from: https://cli.github.com/"
         )
@@ -85,7 +93,7 @@ def initialise_github_repository(project_name: str) -> None:
 
     # Check if authenticated with GitHub.
     try:
-        subprocess.run(["gh", "auth", "status"], check=True, capture_output=True)
+        subprocess.run([gh_path, "auth", "status"], check=True, capture_output=True)
     except subprocess.CalledProcessError:
         print(
             "You are not authenticated with GitHub. Please run 'gh auth login' first."
@@ -98,25 +106,25 @@ def initialise_github_repository(project_name: str) -> None:
         # Check if there are commits.
         try:
             subprocess.run(
-                ["git", "log", "--oneline", "-1"], check=True, capture_output=True
+                [git_path, "log", "--oneline", "-1"], check=True, capture_output=True
             )
             has_commits = True
         except subprocess.CalledProcessError:
             has_commits = False
     else:
         # Initialize git repository.
-        subprocess.run(["git", "init"], check=True)
+        subprocess.run([git_path, "init"], check=True)
         print("Initialized empty Git repository.")
         has_commits = False
 
     if not has_commits:
         # Add all files.
-        subprocess.run(["git", "add", "."], check=True)
+        subprocess.run([git_path, "add", "."], check=True)
         print("Added files to staging area.")
 
         # Commit.
         try:
-            subprocess.run(["git", "commit", "-m", "Initial commit"], check=True)
+            subprocess.run([git_path, "commit", "-m", "Initial commit"], check=True)
             print("Created initial commit.")
         except subprocess.CalledProcessError:
             print("No changes to commit or commit failed.")
@@ -130,7 +138,7 @@ def initialise_github_repository(project_name: str) -> None:
     try:
         subprocess.run(
             [
-                "gh",
+                gh_path,
                 "repo",
                 "create",
                 project_name,
@@ -148,9 +156,10 @@ def initialise_github_repository(project_name: str) -> None:
 
 def main() -> None:
     """Run the main setup process."""
-    check_uv_installed()
+    uv_path = check_uv_installed()
     project_name, description, python_version = get_user_input()
     replace_variables(project_name, description, python_version)
+    initialise_precommit(uv_path)
 
     # Remove the script itself.
     Path(__file__).unlink()
